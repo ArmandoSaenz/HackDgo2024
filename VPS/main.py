@@ -142,32 +142,6 @@ async def receive_image(image: UploadFile = File(...)):
         else:
             print("No se pudo establecer una conexión. No hay nada que cerrar.")
 
-
-@app.post("/api/neumatico")
-async def receive_image(image: UploadFile = File(...)):
-    # Verificar el tipo de archivo
-    if image.content_type not in ["image/png", "image/jpeg"]:
-        return JSONResponse(content={"status": "unsupported format"}, status_code=400)
-
-    # Leer y procesar la imagen
-    image_data = await image.read()
-    image_array = np.asarray(bytearray(image_data), dtype=np.uint8)
-    image = cv2.imdecode(image_array, cv2.IMREAD_GRAYSCALE)
-    
-    # Preprocesar la imagen
-    image = cv2.resize(image, (500, 500))
-    image = image / 255.0  # Normalizar la imagen
-    image = np.expand_dims(image, axis=-1)  # Añadir dimensión para canales
-    image = np.expand_dims(image, axis=0)   # Añadir dimensión para el batch
-
-    # Realizar la predicción
-    prediction = model.predict(image)
-
-    # Determinar la calidad del neumático según la predicción
-    status = "Buena" if prediction[0] >= 0.9 else "Baja"
-
-    return JSONResponse(content={"status": status, "prediction": float(prediction[0])})
-
 @app.get("/test")
 async def test():
     return JSONResponse(content={"Online": 1})
